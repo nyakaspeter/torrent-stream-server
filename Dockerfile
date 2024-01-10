@@ -54,6 +54,10 @@ FROM base as final
 
 # Use production node environment by default.
 ENV NODE_ENV production
+ENV TORRENT_STORAGE_DIR /data/torrents 
+ENV KEEP_DOWNLOADED_FILES false
+
+VOLUME /data
 
 # Run the application as a non-root user.
 USER node
