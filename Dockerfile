@@ -59,6 +59,7 @@ ENV KEEP_DOWNLOADED_FILES 0
 
 VOLUME /data
 
+RUN mkdir -p /data
 RUN chown -R node /data
 
 # Run the application as a non-root user.
