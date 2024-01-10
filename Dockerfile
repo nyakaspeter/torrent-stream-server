@@ -55,7 +55,7 @@ FROM base as final
 # Use production node environment by default.
 ENV NODE_ENV production
 ENV TORRENT_STORAGE_DIR /data/torrents 
-ENV KEEP_DOWNLOADED_FILES false
+ENV KEEP_DOWNLOADED_FILES 0
 
 VOLUME /data
 
