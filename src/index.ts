@@ -1,6 +1,9 @@
+import "dotenv/config";
 import express from "express";
-import { getStreamingMimeType } from "./utils.js";
+import { searchTorrents } from "./search.js";
+import { getHumanReadableDuration, getStreamingMimeType } from "./utils.js";
 import {
+  getActiveTorrents,
   getFile,
   getOrAddTorrent,
   getTorrentInfo,
@@ -10,7 +13,33 @@ import {
 
 const PORT = Number(process.env.PORT) || 8000;
 
+const launchTime = Date.now();
+
 const app = express();
+
+app.use(express.json());
+
+app.get("/stats", (req, res) => {
+  const stats = {
+    uptime: getHumanReadableDuration(Date.now() - launchTime),
+    activeTorrents: getActiveTorrents(),
+  };
+
+  res.json(stats);
+});
+
+app.get("/torrents/:query", async (req, res) => {
+  const { query } = req.params;
+  const torrents = await searchTorrents(query);
+  res.json(torrents);
+});
+
+app.post("/torrents/:query", async (req, res) => {
+  const { query } = req.params;
+  const options = req.body;
+  const torrents = await searchTorrents(query, options);
+  res.json(torrents);
+});
 
 app.get("/torrent/:torrentUri", async (req, res) => {
   const { torrentUri } = req.params;

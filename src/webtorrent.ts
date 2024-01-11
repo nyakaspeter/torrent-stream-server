@@ -6,16 +6,34 @@ import os from "os";
 import path from "path";
 import WebTorrent, { Torrent } from "webtorrent";
 
+interface FileInfo {
+  name: string;
+  path: string;
+  size: number;
+  url?: string;
+}
+
+interface ActiveFileInfo extends FileInfo {
+  progress: number;
+  downloaded: number;
+}
+
 interface TorrentInfo {
   name: string;
   infoHash: string;
   size: number;
-  files: {
-    name: string;
-    path: string;
-    size: number;
-    url?: string;
-  }[];
+  files: FileInfo[];
+}
+
+interface ActiveTorrentInfo extends TorrentInfo {
+  progress: number;
+  downloaded: number;
+  uploaded: number;
+  downloadSpeed: number;
+  uploadSpeed: number;
+  peers: number;
+  openStreams: number;
+  files: ActiveFileInfo[];
 }
 
 const TORRENT_STORAGE_DIR =
@@ -44,6 +62,28 @@ streamClient.on("error", (error) => {
     console.error(`Error: ${error.message}`);
   }
 });
+
+export const getActiveTorrents = (): ActiveTorrentInfo[] => {
+  return streamClient.torrents.map((torrent) => ({
+    name: torrent.name,
+    infoHash: torrent.infoHash,
+    size: torrent.length,
+    progress: torrent.progress,
+    downloaded: torrent.downloaded,
+    uploaded: torrent.uploaded,
+    downloadSpeed: torrent.downloadSpeed,
+    uploadSpeed: torrent.uploadSpeed,
+    peers: torrent.numPeers,
+    openStreams: openStreams.get(torrent.infoHash) || 0,
+    files: torrent.files.map((file) => ({
+      name: file.name,
+      path: file.path,
+      size: file.length,
+      progress: file.downloaded,
+      downloaded: file.downloaded,
+    })),
+  }));
+};
 
 export const getOrAddTorrent = (uri: string) =>
   new Promise<Torrent | undefined>((resolve) => {
@@ -87,7 +127,7 @@ export const getTorrentInfo = async (uri: string) => {
       (torrent) => {
         clearTimeout(timeout);
         const info = getInfo(torrent);
-        console.log(`🔍 ${info.name}`);
+        console.log(`❓ ${info.name}`);
         torrent.destroy();
         resolve(info);
       }
