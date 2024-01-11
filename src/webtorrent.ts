@@ -1,11 +1,10 @@
-import { CronJob } from "cron";
-import fs from "fs";
-import WebTorrent, { Torrent } from "webtorrent";
 // @ts-ignore
 import MemoryStore from "memory-chunk-store";
+
+import fs from "fs-extra";
 import os from "os";
 import path from "path";
-import exitHook from "exit-hook";
+import WebTorrent, { Torrent } from "webtorrent";
 
 interface TorrentInfo {
   name: string;
@@ -24,13 +23,11 @@ const TORRENT_STORAGE_DIR =
   path.join(os.tmpdir(), "torrent-stream-server");
 
 const KEEP_DOWNLOADED_FILES = Boolean(process.env.KEEP_FILES) || false;
+if (!KEEP_DOWNLOADED_FILES) fs.emptyDirSync(TORRENT_STORAGE_DIR);
 
-const cleanupFiles = () => {
-  if (fs.existsSync(TORRENT_STORAGE_DIR) && !KEEP_DOWNLOADED_FILES)
-    fs.rmSync(TORRENT_STORAGE_DIR, { recursive: true });
-};
+const TORRENT_SEED_TIME = Number(process.env.TORRENT_SEED_TIME) || 60 * 1000;
 
-cleanupFiles();
+const TORRENT_TIMEOUT = Number(process.env.TORRENT_TIMEOUT) || 5 * 1000;
 
 const infoClient = new WebTorrent();
 const streamClient = new WebTorrent();
@@ -65,7 +62,7 @@ export const getOrAddTorrent = (uri: string) =>
     const timeout = setTimeout(() => {
       torrent.destroy();
       resolve(undefined);
-    }, 5000);
+    }, TORRENT_TIMEOUT);
   });
 
 export const getFile = (torrent: Torrent, path: string) =>
@@ -99,40 +96,43 @@ export const getTorrentInfo = async (uri: string) => {
     const timeout = setTimeout(() => {
       torrent.destroy();
       resolve(undefined);
-    }, 5000);
+    }, TORRENT_TIMEOUT);
   });
 };
 
-const accessTimes = new Map<string, number>();
+const timeouts = new Map<string, NodeJS.Timeout>();
+const openStreams = new Map<string, number>();
 
-export const updateAccessTime = (hash: string) => {
-  accessTimes.set(hash, Date.now());
+export const streamOpened = (hash: string) => {
+  const count = openStreams.get(hash) || 0;
+  openStreams.set(hash, count + 1);
+
+  const timeout = timeouts.get(hash);
+
+  if (timeout) {
+    clearTimeout(timeout);
+    timeouts.delete(hash);
+  }
 };
 
-CronJob.from({
-  cronTime: "0,30 * * * * *",
-  start: true,
-  onTick: async () => {
-    const now = Date.now();
-    const toRemove: string[] = [];
+export const streamClosed = (hash: string) => {
+  const count = openStreams.get(hash) || 1;
+  openStreams.set(hash, count - 1);
 
-    for (const [hash, lastAccessed] of accessTimes) {
-      if (now - lastAccessed > 1000 * 60) {
-        toRemove.push(hash);
-      }
-    }
+  if (count > 1) return;
 
-    for (const hash of toRemove) {
-      accessTimes.delete(hash);
-      const torrent = await streamClient.get(hash);
-      torrent?.destroy(undefined, () => {
-        console.log(`➖ ${torrent.name}`);
-      });
-    }
-  },
-});
+  openStreams.delete(hash);
 
-exitHook(() => {
-  console.log("Torrent stream server shutting down");
-  cleanupFiles();
-});
+  let timeout = timeouts.get(hash);
+  if (timeout) return;
+
+  timeout = setTimeout(async () => {
+    const torrent = await streamClient.get(hash);
+    torrent?.destroy(undefined, () => {
+      console.log(`➖ ${torrent.name}`);
+      timeouts.delete(hash);
+    });
+  }, TORRENT_SEED_TIME);
+
+  timeouts.set(hash, timeout);
+};

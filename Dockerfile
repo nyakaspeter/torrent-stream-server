@@ -54,8 +54,10 @@ FROM base as final
 
 # Use production node environment by default.
 ENV NODE_ENV production
-ENV TORRENT_STORAGE_DIR /data/torrents 
 ENV KEEP_DOWNLOADED_FILES 0
+ENV TORRENT_STORAGE_DIR /data
+ENV TORRENT_SEED_TIME 60000
+ENV TORRENT_TIMEOUT 5000
 
 VOLUME /data
 

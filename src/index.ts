@@ -1,11 +1,12 @@
 import express from "express";
+import { getStreamingMimeType } from "./utils.js";
 import {
   getFile,
   getOrAddTorrent,
   getTorrentInfo,
-  updateAccessTime,
+  streamClosed,
+  streamOpened,
 } from "./webtorrent.js";
-import { getStreamingMimeType } from "./utils.js";
 
 const PORT = Number(process.env.PORT) || 8000;
 
@@ -35,17 +36,20 @@ app.get("/stream/:torrentUri/:filePath", async (req, res) => {
   const torrent = await getOrAddTorrent(torrentUri);
   if (!torrent) return res.status(500).send("Failed to add torrent");
 
-  updateAccessTime(torrent.infoHash);
-
   const file = getFile(torrent, filePath);
   if (!file) return res.status(404).send("File not found");
 
-  let { range } = req.headers;
-  if (!range) range = "bytes=0-";
-
-  const positions = range.replace(/bytes=/, "").split("-");
+  const { range } = req.headers;
+  const positions = (range || "").replace(/bytes=/, "").split("-");
   const start = Number(positions[0]);
-  const end = Math.min(start + torrent.pieceLength, file.length - 1);
+  const end = Number(positions[1]) || file.length - 1;
+
+  if (start >= file.length || end >= file.length) {
+    res.writeHead(416, {
+      "Content-Range": `bytes */${file.length}`,
+    });
+    return res.end();
+  }
 
   const headers = {
     "Content-Range": `bytes ${start}-${end}/${file.length}`,
@@ -60,6 +64,8 @@ app.get("/stream/:torrentUri/:filePath", async (req, res) => {
     const videoStream = file.createReadStream({ start, end });
     videoStream.on("error", () => {});
     videoStream.pipe(res);
+    streamOpened(torrent.infoHash);
+    res.on("close", () => streamClosed(torrent.infoHash));
   } catch (error) {
     res.status(500).end();
   }
