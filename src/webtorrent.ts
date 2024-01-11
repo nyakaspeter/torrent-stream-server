@@ -79,7 +79,7 @@ export const getActiveTorrents = (): ActiveTorrentInfo[] => {
       name: file.name,
       path: file.path,
       size: file.length,
-      progress: file.downloaded,
+      progress: file.progress,
       downloaded: file.downloaded,
     })),
   }));
