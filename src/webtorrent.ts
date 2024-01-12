@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import os from "os";
 import path from "path";
 import WebTorrent, { Torrent } from "webtorrent";
+import { getHumanReadableDuration } from "./utils.js";
 
 interface FileInfo {
   name: string;
@@ -43,12 +44,20 @@ const TORRENT_STORAGE_DIR =
 const KEEP_DOWNLOADED_FILES = Boolean(process.env.KEEP_FILES) || false;
 if (!KEEP_DOWNLOADED_FILES) fs.emptyDirSync(TORRENT_STORAGE_DIR);
 
+const DOWNLOAD_SPEED_LIMIT = Number(process.env.DOWNLOAD_SPEED_LIMIT) || -1;
+
+const UPLOAD_SPEED_LIMIT = Number(process.env.UPLOAD_SPEED_LIMIT) || -1;
+
 const TORRENT_SEED_TIME = Number(process.env.TORRENT_SEED_TIME) || 60 * 1000;
 
 const TORRENT_TIMEOUT = Number(process.env.TORRENT_TIMEOUT) || 5 * 1000;
 
 const infoClient = new WebTorrent();
-const streamClient = new WebTorrent();
+const streamClient = new WebTorrent({
+  // @ts-ignore
+  downloadLimit: DOWNLOAD_SPEED_LIMIT,
+  uploadLimit: UPLOAD_SPEED_LIMIT,
+});
 
 streamClient.on("torrent", (torrent) => {
   console.log(`➕ ${torrent.name}`);
@@ -65,8 +74,13 @@ streamClient.on("error", (error) => {
 
 infoClient.on("error", () => {});
 
-export const getActiveTorrents = (): ActiveTorrentInfo[] => {
-  return streamClient.torrents.map((torrent) => ({
+const launchTime = Date.now();
+
+export const getStats = () => ({
+  uptime: getHumanReadableDuration(Date.now() - launchTime),
+  downloadSpeed: streamClient.downloadSpeed,
+  uploadSpeed: streamClient.uploadSpeed,
+  activeTorrents: streamClient.torrents.map((torrent) => ({
     name: torrent.name,
     infoHash: torrent.infoHash,
     size: torrent.length,
@@ -84,8 +98,8 @@ export const getActiveTorrents = (): ActiveTorrentInfo[] => {
       progress: file.progress,
       downloaded: file.downloaded,
     })),
-  }));
-};
+  })),
+});
 
 export const getOrAddTorrent = (uri: string) =>
   new Promise<Torrent | undefined>((resolve) => {
@@ -97,6 +111,8 @@ export const getOrAddTorrent = (uri: string) =>
       },
       (torrent) => {
         clearTimeout(timeout);
+        torrent.files.forEach((file) => file.deselect());
+        torrent.deselect(0, torrent.pieces.length - 1, 0);
         resolve(torrent);
       }
     );

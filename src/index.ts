@@ -1,11 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import { searchTorrents } from "./search.js";
-import { getHumanReadableDuration, getStreamingMimeType } from "./utils.js";
+import { getStreamingMimeType } from "./utils.js";
 import {
-  getActiveTorrents,
   getFile,
   getOrAddTorrent,
+  getStats,
   getTorrentInfo,
   streamClosed,
   streamOpened,
@@ -13,18 +13,12 @@ import {
 
 const PORT = Number(process.env.PORT) || 8000;
 
-const launchTime = Date.now();
-
 const app = express();
 
 app.use(express.json());
 
 app.get("/stats", (req, res) => {
-  const stats = {
-    uptime: getHumanReadableDuration(Date.now() - launchTime),
-    activeTorrents: getActiveTorrents(),
-  };
-
+  const stats = getStats();
   res.json(stats);
 });
 
