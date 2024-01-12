@@ -25,8 +25,6 @@ export const searchNcore = async (
   ncorePassword?: string
 ): Promise<TorrentSearchResult[]> => {
   try {
-    const torrents: TorrentSearchResult[] = [];
-
     const user = ncoreUser || NCORE_USER;
     const password = ncorePassword || NCORE_PASSWORD;
 
@@ -46,6 +44,8 @@ export const searchNcore = async (
     const isQueryImdbId = /ev\d{7}\/\d{4}(-\d)?|(ch|co|ev|nm|tt)\d{7}/.test(
       searchQuery
     );
+
+    const torrents: TorrentSearchResult[] = [];
 
     let page = 0;
 

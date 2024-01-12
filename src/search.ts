@@ -87,5 +87,9 @@ export const searchTorrents = async (
     );
   }
 
-  return (await Promise.all(promises)).flat();
+  const results = (await Promise.all(promises)).flat();
+
+  console.log(`🔍 ${results.length} results for ${query}`);
+
+  return results;
 };

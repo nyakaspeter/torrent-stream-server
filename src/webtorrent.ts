@@ -63,6 +63,8 @@ streamClient.on("error", (error) => {
   }
 });
 
+infoClient.on("error", () => {});
+
 export const getActiveTorrents = (): ActiveTorrentInfo[] => {
   return streamClient.torrents.map((torrent) => ({
     name: torrent.name,
