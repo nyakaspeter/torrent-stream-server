@@ -78,6 +78,7 @@ const launchTime = Date.now();
 
 export const getStats = () => ({
   uptime: getHumanReadableDuration(Date.now() - launchTime),
+  openStreams: [...openStreams.values()].reduce((a, b) => a + b, 0),
   downloadSpeed: streamClient.downloadSpeed,
   uploadSpeed: streamClient.uploadSpeed,
   activeTorrents: streamClient.torrents.map((torrent) => ({
@@ -111,8 +112,9 @@ export const getOrAddTorrent = (uri: string) =>
       },
       (torrent) => {
         clearTimeout(timeout);
-        torrent.files.forEach((file) => file.deselect());
-        torrent.deselect(0, torrent.pieces.length - 1, 0);
+        // this is buggy, commented out for now
+        // torrent.files.forEach((file) => file.deselect());
+        // torrent.deselect(0, torrent.pieces.length - 1, 0);
         resolve(torrent);
       }
     );
