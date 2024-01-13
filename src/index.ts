@@ -84,11 +84,25 @@ app.get("/stream/:torrentUri/:filePath", async (req, res) => {
   res.writeHead(206, headers);
 
   try {
+    const noDataTimeout = setTimeout(() => {
+      res.status(500).end();
+    }, 10000);
+
     const videoStream = file.createReadStream({ start, end });
-    videoStream.on("error", () => {});
+
+    videoStream.on("data", () => {
+      clearTimeout(noDataTimeout);
+    });
+
+    videoStream.on("error", (error) => {});
+
     videoStream.pipe(res);
+
     streamOpened(torrent.infoHash);
-    res.on("close", () => streamClosed(torrent.infoHash));
+
+    res.on("close", () => {
+      streamClosed(torrent.infoHash);
+    });
   } catch (error) {
     res.status(500).end();
   }

@@ -50,60 +50,64 @@ export const searchNcore = async (
     let page = 0;
 
     while (true) {
-      page++;
+      try {
+        page++;
 
-      let torrentsOnPage = 0;
+        let torrentsOnPage = 0;
 
-      let params = new URLSearchParams({
-        oldal: page.toString(),
-        tipus: "kivalasztottak_kozott",
-        kivalasztott_tipus: categories.join(","),
-        mire: searchQuery,
-        miben: isQueryImdbId ? "imdb" : "name",
-        miszerint: "ctime",
-        hogyan: "DESC",
-      });
-
-      const link = `/torrents.php?${params.toString()}}`;
-      const torrentsPage = await client.get(link);
-      const $ = cheerio.load(torrentsPage.data);
-
-      const rssUrl = $("link[rel=alternate]").attr("href");
-      const downloadKey = rssUrl?.split("=")[1];
-      if (!downloadKey) return torrents;
-
-      for (const el of $("div.box_torrent")) {
-        torrentsOnPage++;
-
-        const name = $(el).find("div.torrent_txt > a").attr("title");
-
-        const categoryHref = $(el)
-          .find("a > img.categ_link")
-          .parent()
-          .attr("href");
-
-        const tracker = "nCore";
-        const category = parseCategory(categoryHref?.split("=")[1]);
-        const size = parseSize($(el).find("div.box_meret2").text());
-        const seeds = Number($(el).find("div.box_s2").text());
-        const peers = Number($(el).find("div.box_l2").text());
-        const torrentId = $(el).next().next().attr("id");
-        const torrent = `https://ncore.pro/torrents.php?action=download&id=${torrentId}&key=${downloadKey}`;
-
-        if (!name || !torrentId || !downloadKey) continue;
-
-        torrents.push({
-          name,
-          tracker,
-          category,
-          size,
-          seeds,
-          peers,
-          torrent,
+        let params = new URLSearchParams({
+          oldal: page.toString(),
+          tipus: "kivalasztottak_kozott",
+          kivalasztott_tipus: categories.join(","),
+          mire: searchQuery,
+          miben: isQueryImdbId ? "imdb" : "name",
+          miszerint: "ctime",
+          hogyan: "DESC",
         });
-      }
 
-      if (torrentsOnPage < 50) break;
+        const link = `/torrents.php?${params.toString()}}`;
+        const torrentsPage = await client.get(link);
+        const $ = cheerio.load(torrentsPage.data);
+
+        const rssUrl = $("link[rel=alternate]").attr("href");
+        const downloadKey = rssUrl?.split("=")[1];
+        if (!downloadKey) return torrents;
+
+        for (const el of $("div.box_torrent")) {
+          torrentsOnPage++;
+
+          const name = $(el).find("div.torrent_txt > a").attr("title");
+
+          const categoryHref = $(el)
+            .find("a > img.categ_link")
+            .parent()
+            .attr("href");
+
+          const tracker = "nCore";
+          const category = parseCategory(categoryHref?.split("=")[1]);
+          const size = parseSize($(el).find("div.box_meret2").text());
+          const seeds = Number($(el).find("div.box_s2").text());
+          const peers = Number($(el).find("div.box_l2").text());
+          const torrentId = $(el).next().next().attr("id");
+          const torrent = `https://ncore.pro/torrents.php?action=download&id=${torrentId}&key=${downloadKey}`;
+
+          if (!name || !torrentId || !downloadKey) continue;
+
+          torrents.push({
+            name,
+            tracker,
+            category,
+            size,
+            seeds,
+            peers,
+            torrent,
+          });
+        }
+
+        if (torrentsOnPage < 50) break;
+      } catch {
+        continue;
+      }
     }
 
     return torrents;

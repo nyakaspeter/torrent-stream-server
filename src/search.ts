@@ -1,10 +1,15 @@
-import { searchJackett } from "./sources/jackett.js";
 import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory.js";
+import {
+  ItorrentCategory,
+  ItorrentQuality,
+  searchItorrent,
+} from "./sources/itorrent.js";
+import { searchJackett } from "./sources/jackett.js";
 import { NcoreCategory, searchNcore } from "./sources/ncore.js";
 
 export type TorrentCategory = "movie" | "show";
 
-export type TorrentSource = "jackett" | "ncore";
+export type TorrentSource = "jackett" | "ncore" | "itorrent";
 
 export interface TorrentSearchOptions {
   categories?: TorrentCategory[];
@@ -85,6 +90,26 @@ export const searchTorrents = async (
         options?.ncore?.password
       )
     );
+  }
+
+  if (options?.sources?.includes("itorrent") || searchAllSources) {
+    const categories = new Set<ItorrentCategory>();
+
+    if (options?.categories?.includes("movie") || searchAllCategories) {
+      categories.add(ItorrentCategory.Film);
+    }
+
+    if (options?.categories?.includes("show") || searchAllCategories) {
+      categories.add(ItorrentCategory.Sorozat);
+    }
+
+    const qualities = [
+      ItorrentQuality.HD,
+      ItorrentQuality.SD,
+      ItorrentQuality.CAM,
+    ];
+
+    promises.push(searchItorrent(query, Array.from(categories), qualities));
   }
 
   const results = (await Promise.all(promises)).flat();
