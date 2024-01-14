@@ -41,7 +41,10 @@ const TORRENT_STORAGE_DIR =
   process.env.TORRENT_STORAGE_DIR ||
   path.join(os.tmpdir(), "torrent-stream-server");
 
-const KEEP_DOWNLOADED_FILES = Boolean(process.env.KEEP_FILES) || false;
+const KEEP_DOWNLOADED_FILES = process.env.KEEP_FILES
+  ? process.env.KEEP_FILES === "true"
+  : false;
+
 if (!KEEP_DOWNLOADED_FILES) fs.emptyDirSync(TORRENT_STORAGE_DIR);
 
 const DOWNLOAD_SPEED_LIMIT = Number(process.env.DOWNLOAD_SPEED_LIMIT) || -1;
