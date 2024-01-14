@@ -25,7 +25,7 @@ export const searchItorrent = async (
     categories.map(async (category) => {
       let page = 0;
 
-      while (true) {
+      while (page <= 5) {
         try {
           page++;
 

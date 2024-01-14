@@ -49,7 +49,7 @@ export const searchNcore = async (
 
     let page = 0;
 
-    while (true) {
+    while (page <= 5) {
       try {
         page++;
 
