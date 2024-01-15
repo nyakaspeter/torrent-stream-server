@@ -3,6 +3,7 @@ import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 import { CookieJar } from "tough-cookie";
 import { TorrentSearchResult } from "../search.js";
+import { isImdbId } from "../utils.js";
 
 const NCORE_USER = process.env.NCORE_USER;
 const NCORE_PASSWORD = process.env.NCORE_PASSWORD;
@@ -41,10 +42,6 @@ export const searchNcore = async (
     formData.append("submitted", "1");
     await client.post("/login.php", formData);
 
-    const isQueryImdbId = /ev\d{7}\/\d{4}(-\d)?|(ch|co|ev|nm|tt)\d{7}/.test(
-      searchQuery
-    );
-
     const torrents: TorrentSearchResult[] = [];
 
     let page = 0;
@@ -60,7 +57,7 @@ export const searchNcore = async (
           tipus: "kivalasztottak_kozott",
           kivalasztott_tipus: categories.join(","),
           mire: searchQuery,
-          miben: isQueryImdbId ? "imdb" : "name",
+          miben: isImdbId(searchQuery) ? "imdb" : "name",
           miszerint: "ctime",
           hogyan: "DESC",
         });

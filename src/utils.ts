@@ -23,3 +23,6 @@ export const getHumanReadableDuration = (millisecs: number) => {
     return days + " days";
   }
 };
+
+export const isImdbId = (str: string) =>
+  /ev\d{7}\/\d{4}(-\d)?|(ch|co|ev|nm|tt)\d{7}/.test(str);
