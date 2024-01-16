@@ -8,10 +8,17 @@ import {
 import { searchJackett } from "./sources/jackett.js";
 import { NcoreCategory, searchNcore } from "./sources/ncore.js";
 import { searchYts } from "./sources/yts.js";
+import { InsaneCategory, searchInsane } from "./sources/insane.js";
 
 export type TorrentCategory = "movie" | "show";
 
-export type TorrentSource = "jackett" | "ncore" | "itorrent" | "yts" | "eztv";
+export type TorrentSource =
+  | "jackett"
+  | "ncore"
+  | "insane"
+  | "itorrent"
+  | "yts"
+  | "eztv";
 
 export interface TorrentSearchOptions {
   categories?: TorrentCategory[];
@@ -21,6 +28,10 @@ export interface TorrentSearchOptions {
     apiKey?: string;
   };
   ncore?: {
+    user?: string;
+    password?: string;
+  };
+  insane?: {
     user?: string;
     password?: string;
   };
@@ -90,6 +101,37 @@ export const searchTorrents = async (
         Array.from(categories),
         options?.ncore?.user,
         options?.ncore?.password
+      )
+    );
+  }
+
+  if (options?.sources?.includes("insane") || searchAllSources) {
+    const categories = new Set<InsaneCategory>();
+
+    if (options?.categories?.includes("movie") || searchAllCategories) {
+      categories.add(InsaneCategory.Film_Hun_SD);
+      categories.add(InsaneCategory.Film_Hun_HD);
+      categories.add(InsaneCategory.Film_Hun_UHD);
+      categories.add(InsaneCategory.Film_Eng_SD);
+      categories.add(InsaneCategory.Film_Eng_HD);
+      categories.add(InsaneCategory.Film_Eng_UHD);
+    }
+
+    if (options?.categories?.includes("show") || searchAllCategories) {
+      categories.add(InsaneCategory.Sorozat_Hun);
+      categories.add(InsaneCategory.Sorozat_Hun_HD);
+      categories.add(InsaneCategory.Sorozat_Hun_UHD);
+      categories.add(InsaneCategory.Sorozat_Eng);
+      categories.add(InsaneCategory.Sorozat_Eng_HD);
+      categories.add(InsaneCategory.Sorozat_Eng_UHD);
+    }
+
+    promises.push(
+      searchInsane(
+        query,
+        Array.from(categories),
+        options?.insane?.user,
+        options?.insane?.password
       )
     );
   }

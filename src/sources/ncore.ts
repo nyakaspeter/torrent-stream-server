@@ -88,7 +88,7 @@ export const searchNcore = async (
           const torrentId = $(el).next().next().attr("id");
           const torrent = `https://ncore.pro/torrents.php?action=download&id=${torrentId}&key=${downloadKey}`;
 
-          if (!name || !torrentId || !downloadKey) continue;
+          if (!name || !torrentId) continue;
 
           torrents.push({
             name,
