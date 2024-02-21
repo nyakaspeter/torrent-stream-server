@@ -1,113 +1,42 @@
-import "dotenv/config";
-import express from "express";
-import { searchTorrents } from "./search.js";
-import { getStreamingMimeType } from "./utils.js";
-import {
-  getFile,
-  getOrAddTorrent,
-  getStats,
-  getTorrentInfo,
-  streamClosed,
-  streamOpened,
-} from "./webtorrent.js";
+import "./api.js";
 
-const PORT = Number(process.env.PORT) || 8000;
+import { createServer } from "http";
+import { parse } from "url";
+import next from "next";
 
-const app = express();
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
+const port = 3000;
+// when using middleware `hostname` and `port` must be provided below
+const app = next({ dev, hostname, port });
+const handle = app.getRequestHandler();
 
-app.use(express.json());
+app.prepare().then(() => {
+  createServer(async (req, res) => {
+    try {
+      // Be sure to pass `true` as the second argument to `url.parse`.
+      // This tells it to parse the query portion of the URL.
+      const parsedUrl = parse(req.url, true);
+      const { pathname, query } = parsedUrl;
 
-app.get("/stats", (req, res) => {
-  const stats = getStats();
-  res.json(stats);
-});
-
-app.get("/torrents/:query", async (req, res) => {
-  const { query } = req.params;
-  const torrents = await searchTorrents(query);
-  res.json(torrents);
-});
-
-app.post("/torrents/:query", async (req, res) => {
-  const { query } = req.params;
-  const options = req.body;
-  const torrents = await searchTorrents(query, options);
-  res.json(torrents);
-});
-
-app.get("/torrent/:torrentUri", async (req, res) => {
-  const { torrentUri } = req.params;
-
-  const torrent = await getTorrentInfo(torrentUri);
-  if (!torrent) return res.status(500).send("Failed to get torrent");
-
-  torrent.files.forEach((file) => {
-    file.url = [
-      `${req.protocol}://${req.get("host")}`,
-      "stream",
-      encodeURIComponent(torrentUri),
-      encodeURIComponent(file.path),
-    ].join("/");
-  });
-
-  res.json(torrent);
-});
-
-app.get("/stream/:torrentUri/:filePath", async (req, res) => {
-  const { torrentUri, filePath } = req.params;
-
-  const torrent = await getOrAddTorrent(torrentUri);
-  if (!torrent) return res.status(500).send("Failed to add torrent");
-
-  const file = getFile(torrent, filePath);
-  if (!file) return res.status(404).send("File not found");
-
-  const { range } = req.headers;
-  const positions = (range || "").replace(/bytes=/, "").split("-");
-  const start = Number(positions[0]);
-  const end = Number(positions[1]) || file.length - 1;
-
-  if (start >= file.length || end >= file.length) {
-    res.writeHead(416, {
-      "Content-Range": `bytes */${file.length}`,
+      if (pathname === "/a") {
+        await app.render(req, res, "/a", query);
+      } else if (pathname === "/b") {
+        await app.render(req, res, "/b", query);
+      } else {
+        await handle(req, res, parsedUrl);
+      }
+    } catch (err) {
+      console.error("Error occurred handling", req.url, err);
+      res.statusCode = 500;
+      res.end("internal server error");
+    }
+  })
+    .once("error", (err) => {
+      console.error(err);
+      process.exit(1);
+    })
+    .listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
     });
-    return res.end();
-  }
-
-  const headers = {
-    "Content-Range": `bytes ${start}-${end}/${file.length}`,
-    "Accept-Ranges": "bytes",
-    "Content-Length": end - start + 1,
-    "Content-Type": getStreamingMimeType(file.name),
-  };
-
-  res.writeHead(206, headers);
-
-  try {
-    const noDataTimeout = setTimeout(() => {
-      res.status(500).end();
-    }, 10000);
-
-    const videoStream = file.createReadStream({ start, end });
-
-    videoStream.on("data", () => {
-      clearTimeout(noDataTimeout);
-    });
-
-    videoStream.on("error", (error) => {});
-
-    videoStream.pipe(res);
-
-    streamOpened(torrent.infoHash);
-
-    res.on("close", () => {
-      streamClosed(torrent.infoHash);
-    });
-  } catch (error) {
-    res.status(500).end();
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Torrent stream server listening on port ${PORT}`);
 });
