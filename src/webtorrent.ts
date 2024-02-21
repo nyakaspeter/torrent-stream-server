@@ -1,11 +1,9 @@
-// @ts-ignore
-import MemoryStore from "memory-chunk-store";
-
 import fs from "fs-extra";
+import MemoryStore from "memory-chunk-store";
 import os from "os";
 import path from "path";
 import WebTorrent, { Torrent } from "webtorrent";
-import { getHumanReadableDuration } from "./utils.js";
+import { getHumanReadableDuration } from "./utils";
 
 interface FileInfo {
   name: string;

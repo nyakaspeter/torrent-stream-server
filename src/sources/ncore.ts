@@ -2,8 +2,8 @@ import axios from "axios";
 import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 import { CookieJar } from "tough-cookie";
-import { TorrentSearchResult } from "../search.js";
-import { isImdbId } from "../utils.js";
+import { TorrentSearchResult } from "../search";
+import { isImdbId } from "../utils";
 
 const NCORE_USER = process.env.NCORE_USER;
 const NCORE_PASSWORD = process.env.NCORE_PASSWORD;
@@ -32,7 +32,6 @@ export const searchNcore = async (
     if (!user || !password) return [];
 
     const jar = new CookieJar();
-    // @ts-ignore
     const client = wrapper(axios.create({ jar, baseURL: "https://ncore.pro" }));
 
     const formData = new FormData();

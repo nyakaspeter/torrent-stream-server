@@ -1,7 +1,6 @@
-import "dotenv/config";
-import express from "express";
-import { searchTorrents } from "./search.js";
-import { getStreamingMimeType } from "./utils.js";
+import { Router } from "express";
+import { searchTorrents } from "./search";
+import { getStreamingMimeType } from "./utils";
 import {
   getFile,
   getOrAddTorrent,
@@ -9,33 +8,29 @@ import {
   getTorrentInfo,
   streamClosed,
   streamOpened,
-} from "./webtorrent.js";
+} from "./webtorrent";
 
-const PORT = Number(process.env.PORT) || 8000;
+export const router = Router();
 
-const app = express();
-
-app.use(express.json());
-
-app.get("/stats", (req, res) => {
+router.get("/stats", (req, res) => {
   const stats = getStats();
   res.json(stats);
 });
 
-app.get("/torrents/:query", async (req, res) => {
+router.get("/torrents/:query", async (req, res) => {
   const { query } = req.params;
   const torrents = await searchTorrents(query);
   res.json(torrents);
 });
 
-app.post("/torrents/:query", async (req, res) => {
+router.post("/torrents/:query", async (req, res) => {
   const { query } = req.params;
   const options = req.body;
   const torrents = await searchTorrents(query, options);
   res.json(torrents);
 });
 
-app.get("/torrent/:torrentUri", async (req, res) => {
+router.get("/torrent/:torrentUri", async (req, res) => {
   const { torrentUri } = req.params;
 
   const torrent = await getTorrentInfo(torrentUri);
@@ -53,7 +48,7 @@ app.get("/torrent/:torrentUri", async (req, res) => {
   res.json(torrent);
 });
 
-app.get("/stream/:torrentUri/:filePath", async (req, res) => {
+router.get("/stream/:torrentUri/:filePath", async (req, res) => {
   const { torrentUri, filePath } = req.params;
 
   const torrent = await getOrAddTorrent(torrentUri);
@@ -106,8 +101,4 @@ app.get("/stream/:torrentUri/:filePath", async (req, res) => {
   } catch (error) {
     res.status(500).end();
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Torrent stream server listening on port ${PORT}`);
 });

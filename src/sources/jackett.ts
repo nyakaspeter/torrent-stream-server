@@ -1,6 +1,6 @@
 import { JackettApi } from "ts-jackett-api";
-import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory.js";
-import { TorrentSearchResult } from "../search.js";
+import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory";
+import { TorrentSearchResult } from "../search";
 
 const JACKETT_URL = process.env.JACKETT_URL;
 const JACKETT_KEY = process.env.JACKETT_KEY;

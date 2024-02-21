@@ -1,14 +1,14 @@
-import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory.js";
-import { searchEztv } from "./sources/eztv.js";
+import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory";
+import { searchEztv } from "./sources/eztv";
 import {
   ItorrentCategory,
   ItorrentQuality,
   searchItorrent,
-} from "./sources/itorrent.js";
-import { searchJackett } from "./sources/jackett.js";
-import { NcoreCategory, searchNcore } from "./sources/ncore.js";
-import { searchYts } from "./sources/yts.js";
-import { InsaneCategory, searchInsane } from "./sources/insane.js";
+} from "./sources/itorrent";
+import { searchJackett } from "./sources/jackett";
+import { NcoreCategory, searchNcore } from "./sources/ncore";
+import { searchYts } from "./sources/yts";
+import { InsaneCategory, searchInsane } from "./sources/insane";
 
 export type TorrentCategory = "movie" | "show";
 
@@ -55,7 +55,7 @@ export const searchTorrents = async (
   const searchAllCategories = !options?.categories?.length;
   const searchAllSources = !options?.sources?.length;
 
-  const promises = [];
+  const promises: Promise<TorrentSearchResult[]>[] = [];
 
   if (options?.sources?.includes("jackett") || searchAllSources) {
     const categories = new Set<JackettCategory>();
