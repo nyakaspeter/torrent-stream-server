@@ -1,8 +1,8 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { getTorrentsByImdbId } from "eztv-crawler";
-import { TorrentSearchResult } from "../search";
-import { isImdbId } from "../utils";
+import { TorrentSearchResult } from "../search.js";
+import { isImdbId } from "../utils.js";
 
 export const searchEztv = async (
   searchQuery: string

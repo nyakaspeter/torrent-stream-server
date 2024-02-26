@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { TorrentSearchResult } from "../search";
+import { TorrentSearchResult } from "../search.js";
 
 export enum ItorrentCategory {
   Film = 3,

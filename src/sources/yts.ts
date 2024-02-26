@@ -1,6 +1,6 @@
 import { details, search } from "yts-api-node";
-import { TorrentSearchResult } from "../search";
-import { isImdbId } from "../utils";
+import { TorrentSearchResult } from "../search.js";
+import { isImdbId } from "../utils.js";
 
 const trackers = [
   "udp://glotorrents.pw:6969/announce",

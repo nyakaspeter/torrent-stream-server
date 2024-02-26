@@ -2,7 +2,7 @@ import axios from "axios";
 import { wrapper } from "axios-cookiejar-support";
 import * as cheerio from "cheerio";
 import { CookieJar } from "tough-cookie";
-import { TorrentSearchResult } from "../search";
+import { TorrentSearchResult } from "../search.js";
 
 const INSANE_USER = process.env.INSANE_USER;
 const INSANE_PASSWORD = process.env.INSANE_PASSWORD;
@@ -40,7 +40,9 @@ export const searchInsane = async (
     const jar = new CookieJar();
 
     const client = wrapper(
+      // @ts-ignore
       axios.create({
+        // @ts-ignore
         jar,
         baseURL: "https://newinsane.info",
         headers: { "User-Agent": USER_AGENT },

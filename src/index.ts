@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import { router } from "./router";
+import { router } from "./router.js";
 
 const PORT = Number(process.env.PORT) || 8000;
 

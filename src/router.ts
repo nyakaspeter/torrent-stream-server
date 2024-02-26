@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { searchTorrents } from "./search";
-import { getStreamingMimeType } from "./utils";
+import { searchTorrents } from "./search.js";
+import { getStreamingMimeType } from "./utils.js";
 import {
   getFile,
   getOrAddTorrent,
@@ -8,7 +8,7 @@ import {
   getTorrentInfo,
   streamClosed,
   streamOpened,
-} from "./webtorrent";
+} from "./webtorrent.js";
 
 export const router = Router();
 

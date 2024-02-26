@@ -3,7 +3,7 @@ import MemoryStore from "memory-chunk-store";
 import os from "os";
 import path from "path";
 import WebTorrent, { Torrent } from "webtorrent";
-import { getHumanReadableDuration } from "./utils";
+import { getHumanReadableDuration } from "./utils.js";
 
 interface FileInfo {
   name: string;
@@ -189,6 +189,7 @@ export const streamClosed = (hash: string) => {
 
   timeout = setTimeout(async () => {
     const torrent = await streamClient.get(hash);
+    // @ts-ignore
     torrent?.destroy(undefined, () => {
       console.log(`➖ ${torrent.name}`);
       timeouts.delete(hash);

@@ -1,14 +1,14 @@
-import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory";
-import { searchEztv } from "./sources/eztv";
+import { JackettCategory } from "ts-jackett-api/lib/types/JackettCategory.js";
+import { searchEztv } from "./sources/eztv.js";
 import {
   ItorrentCategory,
   ItorrentQuality,
   searchItorrent,
-} from "./sources/itorrent";
-import { searchJackett } from "./sources/jackett";
-import { NcoreCategory, searchNcore } from "./sources/ncore";
-import { searchYts } from "./sources/yts";
-import { InsaneCategory, searchInsane } from "./sources/insane";
+} from "./sources/itorrent.js";
+import { searchJackett } from "./sources/jackett.js";
+import { NcoreCategory, searchNcore } from "./sources/ncore.js";
+import { searchYts } from "./sources/yts.js";
+import { InsaneCategory, searchInsane } from "./sources/insane.js";
 
 export type TorrentCategory = "movie" | "show";
 

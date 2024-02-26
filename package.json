@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "esrun --node-no-warnings src/index.ts",
+    "build": "tsc",
+    "start": "node --no-warnings dist/index.js",
     "dev": "esrun --node-no-warnings --watch src/index.ts"
   },
   "keywords": [],
